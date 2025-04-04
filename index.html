@@ -1,25 +1,713 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <title>행복한 일기 (Happy Diary)</title>
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="./HappyDiary/client/src/main.tsx"></script>
-    <!-- This script injects a replit badge into the page, please feel free to remove this line --> -->
-    <script type="text/javascript" src="https://replit.com/public/js/replit-badge-v3.js"></script>
-
-
-    <h1>행복한 일기 (Happy Diary)</h1>
-
-    <h2>행복한 일기 (Happy Diary)</h2>
-
-    <h1>행복한 일기 (Happy Diary)</h1>
-    <h2>행복한 일기 (Happy Diary)</h2>
-    <h2>행복한 일기 (Happy Diary)</h2>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>행복한 일기 (Happy Diary)</title>
+  <style>
+    body {
+      font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      color: #3b5998;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .container {
+      background-color: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    form {
+      margin-bottom: 30px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+    button {
+      background-color: #4a67b7;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background-color: #3b5998;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      padding: 10px 15px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    li:last-child {
+      border-bottom: none;
+    }
+    li:hover {
+      background-color: #f5f5f5;
+    }
+    .entry-title {
+      font-weight: bold;
+      flex-grow: 1;
+    }
+    .entry-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .btn-view {
+      background-color: #4a67b7;
+    }
+    .btn-edit {
+      background-color: #5cb85c;
+    }
+    .btn-delete {
+      background-color: #d9534f;
+    }
+    .btn-small {
+      padding: 5px 10px;
+      font-size: 0.8em;
+    }
+    .entry-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+    }
+    .modal-content {
+      background-color: white;
+      margin: 10% auto;
+      padding: 20px;
+      width: 80%;
+      max-width: 600px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .close:hover {
+      color: black;
+    }
+    .entry-content {
+      margin-top: 20px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+    .error-message {
+      color: #d9534f;
+      margin-bottom: 15px;
+    }
+    .success-message {
+      color: #5cb85c;
+      margin-bottom: 15px;
+    }
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #777;
+    }
+    .button-container {
+      display: flex;
+      margin-bottom: 20px;
+    }
+    .voice-btn {
+      display: flex;
+      align-items: center;
+      background-color: #ff6b6b;
+    }
+    .voice-btn.recording {
+      background-color: #ff0000;
+      animation: pulse 1.5s infinite;
+    }
+    .voice-btn:hover {
+      background-color: #ee5253;
+    }
+    .voice-btn i {
+      margin-right: 5px;
+    }
+    .voice-status {
+      margin-left: 10px;
+      font-style: italic;
+      color: #555;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    .speech-selector {
+      margin-left: 15px;
+      padding: 10px;
+      border-radius: 3px;
+      border: 1px solid #ddd;
+    }
+    .tab-container {
+      margin-bottom: 20px;
+    }
+    .tab-buttons {
+      display: flex;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    .tab-button {
+      padding: 10px 15px;
+      background-color: #f1f1f1;
+      border: none;
+      border-radius: 4px 4px 0 0;
+      margin-right: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .tab-button.active {
+      background-color: #4a67b7;
+      color: white;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
     
-  </body>
+    @media (max-width: 600px) {
+      .entry-actions {
+        flex-direction: column;
+        gap: 5px;
+      }
+      .modal-content {
+        width: 95%;
+        margin: 5% auto;
+      }
+      .button-container {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .speech-selector {
+        margin-left: 0;
+        margin-top: 10px;
+        width: 100%;
+      }
+    }
+  </style>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body>
+  <h1>행복한 일기</h1>
+  
+  <div class="tab-container">
+    <div class="tab-buttons">
+      <button class="tab-button active" onclick="openTab('tab-journal')">일기장</button>
+      <button class="tab-button" onclick="openTab('tab-voice')">음성 인식</button>
+    </div>
+  </div>
+  
+  <div class="container">
+    <!-- Simple Journal Tab -->
+    <div id="tab-journal" class="tab-content active">
+      <form id="entryForm">
+        <div class="error-message" id="formError"></div>
+        <div class="success-message" id="formSuccess"></div>
+        
+        <div>
+          <label for="title">제목:</label>
+          <input type="text" id="title" name="title" required placeholder="일기 제목을 입력하세요">
+        </div>
+        
+        <div>
+          <label for="content">내용:</label>
+          <textarea id="content" name="content" required placeholder="일기 내용을 입력하세요"></textarea>
+        </div>
+        
+        <button type="submit" id="saveButton">저장하기</button>
+      </form>
+      
+      <h2>일기 목록</h2>
+      <div id="entriesList">
+        <div class="loading">일기를 불러오는 중...</div>
+      </div>
+    </div>
+    
+    <!-- Voice Recognition Tab -->
+    <div id="tab-voice" class="tab-content">
+      <form id="voiceForm">
+        <h2>음성 인식으로 일기 작성하기</h2>
+        <div class="error-message" id="voiceFormError"></div>
+        <div class="success-message" id="voiceFormSuccess"></div>
+        
+        <div>
+          <label for="voiceTitle">제목:</label>
+          <input type="text" id="voiceTitle" name="voiceTitle" required placeholder="일기 제목을 입력하세요">
+        </div>
+        
+        <div>
+          <label for="voiceContent">내용:</label>
+          <div class="button-container">
+            <button type="button" id="voice-btn" class="voice-btn">
+              <i class="ri-mic-line"></i> 음성으로 입력하기
+            </button>
+            <span id="voice-status" class="voice-status"></span>
+            <select id="speech-lang" class="speech-selector">
+              <option value="ko-KR">한국어</option>
+              <option value="en-US">English</option>
+              <option value="ja-JP">日本語</option>
+              <option value="zh-CN">中文</option>
+            </select>
+          </div>
+          <textarea id="voiceContent" name="voiceContent" required placeholder="음성 인식 버튼을 클릭하고 말하기 시작하세요"></textarea>
+        </div>
+        
+        <button type="submit">저장하기</button>
+      </form>
+    </div>
+  </div>
+  
+  <!-- View Modal for Entries -->
+  <div id="viewModal" class="entry-modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2 id="modalTitle"></h2>
+      <div id="modalContent" class="entry-content"></div>
+    </div>
+  </div>
+  
+  <script>
+    /********************************************
+     * Tab Functionality
+     ********************************************/
+    function openTab(tabId) {
+      // Hide all tabs
+      const tabContents = document.querySelectorAll('.tab-content');
+      tabContents.forEach(tab => tab.classList.remove('active'));
+      
+      // Deactivate all buttons
+      const tabButtons = document.querySelectorAll('.tab-button');
+      tabButtons.forEach(button => button.classList.remove('active'));
+      
+      // Show the selected tab
+      document.getElementById(tabId).classList.add('active');
+      
+      // Activate the clicked button
+      event.currentTarget.classList.add('active');
+    }
+    
+    /********************************************
+     * Journal Entries Functionality
+     ********************************************/
+    // DOM Elements
+    const entryForm = document.getElementById('entryForm');
+    const titleInput = document.getElementById('title');
+    const contentInput = document.getElementById('content');
+    const formError = document.getElementById('formError');
+    const formSuccess = document.getElementById('formSuccess');
+    const entriesList = document.getElementById('entriesList');
+    const viewModal = document.getElementById('viewModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalContent = document.getElementById('modalContent');
+    const closeModal = document.querySelector('.close');
+    
+    // Voice Recognition Elements
+    const voiceForm = document.getElementById('voiceForm');
+    const voiceTitleInput = document.getElementById('voiceTitle');
+    const voiceContentInput = document.getElementById('voiceContent');
+    const voiceFormError = document.getElementById('voiceFormError');
+    const voiceFormSuccess = document.getElementById('voiceFormSuccess');
+    const voiceButton = document.getElementById('voice-btn');
+    const voiceStatus = document.getElementById('voice-status');
+    const speechLangSelector = document.getElementById('speech-lang');
+    
+    // Current entry being edited (if any)
+    let currentEditId = null;
+    
+    // In-memory storage for entries
+    let entries = [];
+    let nextId = 1;
+    
+    // Hide messages
+    function hideMessages() {
+      formError.textContent = '';
+      formSuccess.textContent = '';
+      voiceFormError.textContent = '';
+      voiceFormSuccess.textContent = '';
+    }
+    
+    // Show error message
+    function showError(message, isVoice = false) {
+      if (isVoice) {
+        voiceFormError.textContent = message;
+        voiceFormSuccess.textContent = '';
+      } else {
+        formError.textContent = message;
+        formSuccess.textContent = '';
+      }
+    }
+    
+    // Show success message
+    function showSuccess(message, isVoice = false) {
+      if (isVoice) {
+        voiceFormSuccess.textContent = message;
+        voiceFormError.textContent = '';
+      } else {
+        formSuccess.textContent = message;
+        formError.textContent = '';
+      }
+    }
+    
+    // Format date
+    function formatDate(date) {
+      return new Date(date).toLocaleString('ko-KR');
+    }
+    
+    // Update entries display
+    function displayEntries() {
+      if (entries.length === 0) {
+        entriesList.innerHTML = '<p>아직 일기가 없습니다. 첫 번째 일기를 작성해보세요!</p>';
+        return;
+      }
+      
+      const ulElement = document.createElement('ul');
+      
+      // Sort entries by date, newest first
+      const sortedEntries = [...entries].sort((a, b) => b.createdAt - a.createdAt);
+      
+      sortedEntries.forEach(entry => {
+        const liElement = document.createElement('li');
+        
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'entry-title';
+        titleSpan.textContent = entry.title;
+        
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'entry-actions';
+        
+        const viewButton = document.createElement('button');
+        viewButton.className = 'btn-view btn-small';
+        viewButton.textContent = '보기';
+        viewButton.onclick = () => viewEntry(entry);
+        
+        const editButton = document.createElement('button');
+        editButton.className = 'btn-edit btn-small';
+        editButton.textContent = '수정';
+        editButton.onclick = () => editEntry(entry);
+        
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn-delete btn-small';
+        deleteButton.textContent = '삭제';
+        deleteButton.onclick = () => deleteEntry(entry.id);
+        
+        actionsDiv.appendChild(viewButton);
+        actionsDiv.appendChild(editButton);
+        actionsDiv.appendChild(deleteButton);
+        
+        liElement.appendChild(titleSpan);
+        liElement.appendChild(actionsDiv);
+        
+        ulElement.appendChild(liElement);
+      });
+      
+      entriesList.innerHTML = '';
+      entriesList.appendChild(ulElement);
+    }
+    
+    // View entry
+    function viewEntry(entry) {
+      modalTitle.textContent = entry.title;
+      modalContent.textContent = entry.content;
+      viewModal.style.display = 'block';
+    }
+    
+    // Edit entry
+    function editEntry(entry) {
+      titleInput.value = entry.title;
+      contentInput.value = entry.content;
+      currentEditId = entry.id;
+      
+      // Change to the journal tab
+      openTab('tab-journal');
+      
+      // Update save button text
+      document.getElementById('saveButton').textContent = '수정하기';
+      
+      // Scroll to form
+      entryForm.scrollIntoView({ behavior: 'smooth' });
+      
+      showSuccess('일기를 수정하는 중입니다. 수정 후 "수정하기" 버튼을 클릭하세요.');
+    }
+    
+    // Delete entry
+    function deleteEntry(id) {
+      if (!confirm('정말로 이 일기를 삭제하시겠습니까?')) {
+        return;
+      }
+      
+      // Find the entry index
+      const entryIndex = entries.findIndex(entry => entry.id === id);
+      
+      if (entryIndex !== -1) {
+        // Remove the entry from the array
+        entries.splice(entryIndex, 1);
+        
+        // Update localStorage
+        localStorage.setItem('diaryEntries', JSON.stringify(entries));
+        
+        // Update the display
+        displayEntries();
+        
+        // If we were editing this entry, reset the form
+        if (currentEditId === id) {
+          resetForm();
+        }
+        
+        showSuccess('일기가 삭제되었습니다.');
+      }
+    }
+    
+    // Save entry (from either form)
+    function saveEntry(event, isVoice = false) {
+      event.preventDefault();
+      hideMessages();
+      
+      // Get inputs from the appropriate form
+      const title = isVoice ? voiceTitleInput.value.trim() : titleInput.value.trim();
+      const content = isVoice ? voiceContentInput.value.trim() : contentInput.value.trim();
+      
+      if (!title || !content) {
+        showError('제목과 내용을 모두 입력해주세요.', isVoice);
+        return;
+      }
+      
+      if (currentEditId !== null) {
+        // Update an existing entry
+        const entryIndex = entries.findIndex(entry => entry.id === currentEditId);
+        
+        if (entryIndex !== -1) {
+          entries[entryIndex] = {
+            ...entries[entryIndex],
+            title,
+            content,
+            updatedAt: Date.now()
+          };
+          
+          showSuccess('일기가 수정되었습니다.', isVoice);
+        }
+      } else {
+        // Create a new entry
+        const newEntry = {
+          id: nextId++,
+          title,
+          content,
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        };
+        
+        entries.push(newEntry);
+        showSuccess('새 일기가 저장되었습니다.', isVoice);
+      }
+      
+      // Update localStorage
+      localStorage.setItem('diaryEntries', JSON.stringify(entries));
+      localStorage.setItem('nextId', nextId.toString());
+      
+      // Reset the form that was used
+      if (isVoice) {
+        voiceForm.reset();
+      } else {
+        resetForm();
+      }
+      
+      // Update the display
+      displayEntries();
+    }
+    
+    // Reset form
+    function resetForm() {
+      entryForm.reset();
+      currentEditId = null;
+      document.getElementById('saveButton').textContent = '저장하기';
+    }
+    
+    /********************************************
+     * Voice Recognition Functionality
+     ********************************************/
+    let recognition = null;
+    let isRecording = false;
+    
+    // Check if browser supports Speech Recognition
+    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      
+      recognition.onstart = () => {
+        isRecording = true;
+        voiceButton.classList.add('recording');
+        voiceStatus.textContent = '음성 인식 중...';
+      };
+      
+      recognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+        
+        // Add the content to the textarea
+        if (finalTranscript) {
+          // If the textarea already has content, add a space before adding new content
+          if (voiceContentInput.value) {
+            voiceContentInput.value += ' ' + finalTranscript;
+          } else {
+            voiceContentInput.value = finalTranscript;
+          }
+        }
+        
+        // Show temporary text
+        if (interimTranscript) {
+          voiceStatus.textContent = `인식 중: ${interimTranscript}`;
+        }
+      };
+      
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        voiceStatus.textContent = `오류: ${event.error}`;
+        stopRecording();
+      };
+      
+      recognition.onend = () => {
+        stopRecording();
+      };
+    } else {
+      voiceButton.disabled = true;
+      voiceStatus.textContent = '이 브라우저는 음성 인식을 지원하지 않습니다.';
+    }
+    
+    // Stop recording function
+    function stopRecording() {
+      isRecording = false;
+      voiceButton.classList.remove('recording');
+      voiceStatus.textContent = '';
+    }
+    
+    /********************************************
+     * Event Listeners
+     ********************************************/
+    // Form submissions
+    entryForm.addEventListener('submit', event => saveEntry(event, false));
+    voiceForm.addEventListener('submit', event => saveEntry(event, true));
+    
+    // Voice button click
+    voiceButton.addEventListener('click', () => {
+      if (!recognition) return;
+      
+      if (isRecording) {
+        recognition.stop();
+      } else {
+        // Set language before starting
+        recognition.lang = speechLangSelector.value;
+        
+        try {
+          recognition.start();
+        } catch (error) {
+          console.error('Speech recognition start error:', error);
+          // If already started, stop and restart
+          recognition.stop();
+          setTimeout(() => {
+            recognition.start();
+          }, 200);
+        }
+      }
+    });
+    
+    // Update language when selector changes
+    speechLangSelector.addEventListener('change', () => {
+      if (recognition && isRecording) {
+        // Restart recognition with new language
+        recognition.stop();
+        recognition.lang = speechLangSelector.value;
+        
+        setTimeout(() => {
+          recognition.start();
+        }, 200);
+      }
+    });
+    
+    // Close modal events
+    closeModal.addEventListener('click', () => {
+      viewModal.style.display = 'none';
+    });
+    
+    window.addEventListener('click', (event) => {
+      if (event.target === viewModal) {
+        viewModal.style.display = 'none';
+      }
+    });
+    
+    /********************************************
+     * Local Storage Initialization
+     ********************************************/
+    // Load entries from localStorage on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        // Load saved entries
+        const savedEntries = localStorage.getItem('diaryEntries');
+        if (savedEntries) {
+          entries = JSON.parse(savedEntries);
+        }
+        
+        // Load next ID
+        const savedNextId = localStorage.getItem('nextId');
+        if (savedNextId) {
+          nextId = parseInt(savedNextId, 10);
+        }
+        
+        // Display entries
+        displayEntries();
+      } catch (error) {
+        console.error('Error loading data from localStorage:', error);
+        entriesList.innerHTML = '<div class="error-message">저장된 일기를 불러오는 데 실패했습니다.</div>';
+      }
+    });
+  </script>
+</body>
 </html>
