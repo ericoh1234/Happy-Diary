@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hello World</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+    .container {
+      text-align: center;
+      padding: 20px;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #4361ee;
+    }
+    button {
+      background-color: #4361ee;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+    button:hover {
+      background-color: #3a56d4;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Hello World!</h1>
+    <p>This is a simple test page to verify that the web server is working correctly.</p>
+    <button id="testButton" onclick="alert('Button clicked! JavaScript is working!')">Click Me</button>
+  </div>
+
+  <script>
+    // Simple JavaScript to verify that client-side code is running
+    console.log('Hello from JavaScript!');
+    
+    // Verify that DOM interactions work
+    document.getElementById('testButton').addEventListener('click', function() {
+      console.log('Button was clicked!');
+    });
+  </script>
+</body>
+</html>

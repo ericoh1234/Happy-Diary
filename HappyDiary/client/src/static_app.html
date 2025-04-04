@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>행복한 일기 (Happy Diary)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #4361ee;
+    }
+    form {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+    }
+    textarea {
+      min-height: 150px;
+    }
+    button {
+      background-color: #4361ee;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 3px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #3a56d4;
+    }
+    .entries {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
+    }
+    .entry-card {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 15px;
+      cursor: pointer;
+    }
+    .entry-card:hover {
+      background-color: #f5f5f5;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background-color: white;
+      margin: 10% auto;
+      padding: 20px;
+      width: 60%;
+      max-width: 600px;
+      border-radius: 5px;
+    }
+    .close {
+      float: right;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .button-container {
+      display: flex;
+      margin-bottom: 20px;
+    }
+    .voice-btn {
+      display: flex;
+      align-items: center;
+      background-color: #ff6b6b;
+    }
+    .voice-btn.recording {
+      background-color: #ff0000;
+      animation: pulse 1.5s infinite;
+    }
+    .voice-btn:hover {
+      background-color: #ee5253;
+    }
+    .voice-btn i {
+      margin-right: 5px;
+    }
+    .voice-status {
+      margin-left: 10px;
+      font-style: italic;
+      color: #555;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    .speech-selector {
+      margin-left: 15px;
+      padding: 10px;
+      border-radius: 3px;
+      border: 1px solid #ddd;
+    }
+  </style>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+  
+  <!-- Import Firebase -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+    // Import Firestore
+    import { getFirestore, collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyA8d4xvwpKKng61SiopQ7czOrayznvVeaQ",
+      authDomain: "diary-ee2e7.firebaseapp.com",
+      projectId: "diary-ee2e7",
+      storageBucket: "diary-ee2e7.firebasestorage.app",
+      messagingSenderId: "585474363501",
+      appId: "1:585474363501:web:927d697394d80b6b0b6f64"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    
+    // Store the initialized Firestore for use by other functions
+    window.db = db;
+    console.log('Firebase initialized successfully');
+  </script>
+</head>
+<body>
+  <h1>행복한 일기</h1>
+
+  <form id="diary-form">
+    <h2>새 일기 작성하기</h2>
+    <div>
+      <label for="title">제목</label>
+      <input type="text" id="title" placeholder="일기 제목을 입력하세요" required>
+    </div>
+    <div>
+      <label for="content">내용</label>
+      <div class="button-container">
+        <button type="button" id="voice-btn" class="voice-btn">
+          <i class="ri-mic-line"></i> 음성으로 입력하기
+        </button>
+        <span id="voice-status" class="voice-status"></span>
+        <select id="speech-lang" class="speech-selector">
+          <option value="ko-KR">한국어</option>
+          <option value="en-US">English</option>
+          <option value="ja-JP">日本語</option>
+          <option value="zh-CN">中文</option>
+        </select>
+      </div>
+      <textarea id="content" placeholder="일기 내용을 입력하세요" required></textarea>
+    </div>
+    <button type="submit">저장하기</button>
+  </form>
+
+  <h2>내 일기 목록</h2>
+  <div id="entries-container" class="entries">
+    <!-- Entries will be added here via JavaScript -->
+    <div id="loading">로딩 중...</div>
+    <div id="no-entries" style="display: none;">일기가 없습니다. 첫 번째 일기를 작성해보세요!</div>
+  </div>
+
+  <div id="entry-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2 id="modal-title"></h2>
+      <p id="modal-content"></p>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const form = document.getElementById('diary-form');
+    const titleInput = document.getElementById('title');
+    const contentInput = document.getElementById('content');
+    const entriesContainer = document.getElementById('entries-container');
+    const loading = document.getElementById('loading');
+    const noEntries = document.getElementById('no-entries');
+    const modal = document.getElementById('entry-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalContent = document.getElementById('modal-content');
+    const closeModal = document.querySelector('.close');
+    const voiceButton = document.getElementById('voice-btn');
+    const voiceStatus = document.getElementById('voice-status');
+    const speechLangSelector = document.getElementById('speech-lang');
+
+    // Speech Recognition Setup
+    let recognition = null;
+    let isRecording = false;
+
+    // Check if browser supports Speech Recognition
+    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      
+      recognition.onstart = () => {
+        isRecording = true;
+        voiceButton.classList.add('recording');
+        voiceStatus.textContent = '음성 인식 중...';
+      };
+      
+      recognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+        
+        // Add the content to the textarea
+        if (finalTranscript) {
+          // If the textarea already has content, add a space before adding new content
+          if (contentInput.value) {
+            contentInput.value += ' ' + finalTranscript;
+          } else {
+            contentInput.value = finalTranscript;
+          }
+        }
+        
+        // Show temporary text
+        if (interimTranscript) {
+          voiceStatus.textContent = `인식 중: ${interimTranscript}`;
+        }
+      };
+      
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        voiceStatus.textContent = `오류: ${event.error}`;
+        stopRecording();
+      };
+      
+      recognition.onend = () => {
+        stopRecording();
+      };
+    } else {
+      voiceButton.disabled = true;
+      voiceStatus.textContent = '이 브라우저는 음성 인식을 지원하지 않습니다.';
+    }
+
+    // Toggle voice recording
+    voiceButton.addEventListener('click', () => {
+      if (!recognition) return;
+      
+      if (isRecording) {
+        recognition.stop();
+      } else {
+        // Set language before starting
+        recognition.lang = speechLangSelector.value;
+        
+        try {
+          recognition.start();
+        } catch (error) {
+          console.error('Speech recognition start error:', error);
+          // If already started, stop and restart
+          recognition.stop();
+        }
+      }
+    });
+
+    // Stop recording function
+    function stopRecording() {
+      isRecording = false;
+      voiceButton.classList.remove('recording');
+      voiceStatus.textContent = '';
+    }
+
+    // Update language when selector changes
+    speechLangSelector.addEventListener('change', () => {
+      if (recognition && isRecording) {
+        // Restart recognition with new language
+        recognition.stop();
+        recognition.lang = speechLangSelector.value;
+        
+        setTimeout(() => {
+          recognition.start();
+        }, 200);
+      }
+    });
+
+    // Fetch all entries
+    async function fetchEntries() {
+      try {
+        // Use relative or absolute URL based on environment
+        const baseUrl = window.location.origin;
+        const url = `${baseUrl}/api/entries`;
+        
+        const response = await fetch(url);
+        const entries = await response.json();
+        
+        loading.style.display = 'none';
+        
+        if (entries.length === 0) {
+          noEntries.style.display = 'block';
+        } else {
+          noEntries.style.display = 'none';
+          displayEntries(entries);
+        }
+      } catch (error) {
+        console.error('Error fetching entries:', error);
+        loading.textContent = '일기를 불러오는데 실패했습니다. 다시 시도해주세요.';
+      }
+    }
+
+    // Display entries in UI
+    function displayEntries(entries) {
+      // Clear any existing entries (except loading and no-entries)
+      const children = Array.from(entriesContainer.children);
+      children.forEach(child => {
+        if (child !== loading && child !== noEntries) {
+          entriesContainer.removeChild(child);
+        }
+      });
+
+      // Add each entry
+      entries.forEach(entry => {
+        const entryCard = document.createElement('div');
+        entryCard.className = 'entry-card';
+        entryCard.innerHTML = `
+          <h3>${entry.title}</h3>
+          <p>${entry.content.length > 100 ? entry.content.substring(0, 100) + '...' : entry.content}</p>
+        `;
+        entryCard.addEventListener('click', () => openModal(entry));
+        entriesContainer.appendChild(entryCard);
+      });
+    }
+
+    // Open modal with entry details
+    function openModal(entry) {
+      modalTitle.textContent = entry.title;
+      modalContent.textContent = entry.content;
+      modal.style.display = 'block';
+    }
+
+    // Close modal
+    closeModal.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    // Also close modal when clicking outside of it
+    window.addEventListener('click', (event) => {
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+
+    // Form submission
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      
+      // Make sure recording is stopped before submitting
+      if (isRecording && recognition) {
+        recognition.stop();
+      }
+      
+      const title = titleInput.value.trim();
+      const content = contentInput.value.trim();
+      
+      if (!title || !content) return;
+      
+      try {
+        // Use relative or absolute URL based on environment
+        const baseUrl = window.location.origin;
+        const url = `${baseUrl}/api/entries`;
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ title, content })
+        });
+        
+        const newEntry = await response.json();
+        
+        // Reset form
+        titleInput.value = '';
+        contentInput.value = '';
+        voiceStatus.textContent = '';
+        
+        // Refresh entries list
+        fetchEntries();
+        
+      } catch (error) {
+        console.error('Error saving entry:', error);
+        alert('일기를 저장하는데 실패했습니다. 다시 시도해주세요.');
+      }
+    });
+
+    // Initial fetch of entries
+    fetchEntries();
+  </script>
+</body>
+</html>
